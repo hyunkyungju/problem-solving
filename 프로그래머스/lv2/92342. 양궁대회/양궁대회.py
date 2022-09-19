@@ -1,62 +1,60 @@
+max_ = 0
+max_shoots = [0] * 11
+
+def change_max(new_max, new_max_shoots):
+    global max_
+    global max_shoots
+    max_ = new_max
+    max_shoots = new_max_shoots[:]
+    
+def get_score_diff(ap_shoots, lion_shoots):
+    ap_score = 0
+    lion_score = 0
+    for i in range(10):
+        target_score = 10 - i
+        if ap_shoots[i] == 0 and lion_shoots[i] == 0:
+            continue
+        if ap_shoots[i] >= lion_shoots[i]:
+            ap_score += target_score
+        else:
+            lion_score += target_score
+    print("diff:", lion_score - ap_score, lion_shoots)
+    return lion_score - ap_score
+    
+    
+def dfs(info, shoots, remain_shoot, target):
+    if target == 0:
+        shoots[10] = remain_shoot
+        score_diff = get_score_diff(info, shoots)
+        if score_diff > max_:
+            change_max(score_diff, shoots)
+        elif score_diff == max_:
+            current_max_point = 0
+            new_max_point = 0
+            for i in range(11):
+                current_max_point += pow(10, i) * max_shoots[i]
+                new_max_point += pow(10, i) * shoots[i]
+            print("cr:", current_max_point, "shoots:", max_shoots )
+            print("new:", new_max_point, "shoots:", shoots )
+            if new_max_point > current_max_point:
+                change_max(score_diff, shoots)
+        return
+    ap_shoot = info[10 - target] 
+    new_shoots = shoots[:]
+    dfs(info, new_shoots, remain_shoot, target - 1)
+    if remain_shoot >= ap_shoot + 1:
+        lion_shoot = ap_shoot + 1
+        new_shoots[10 - target] = lion_shoot
+        dfs(info, new_shoots, remain_shoot - lion_shoot, target - 1)
+    
+    
+
 def solution(n, info):
-    num_list = [[0] * (n + 1) for _ in range(11)] 
-    lst_list = [[[] for _ in range(n+1)] for _ in range(11)]
-    for i in range(11):
-        target = 10-i
-        value = target
-        apeach_shoot = info[i]
-        if apeach_shoot:
-            value *= 2
-        lion_shoot = apeach_shoot + 1
-        
-        if lion_shoot > n:
-            if i == 0:
-                continue
-            for j in range(n + 1):
-                num_list[i][j] = num_list[i-1][j]
-                lst_list[i][j] = lst_list[i-1][j][:]
-            continue
-        
-            
-            
-        if i == 0:
-            num_list[0][lion_shoot] = value
-            lst_list[0][lion_shoot].append(target)
-            continue
-                
-        for j in range(lion_shoot):
-            num_list[i][j] = num_list[i-1][j]
-            lst_list[i][j] = lst_list[i-1][j][:]
-        for j in range(lion_shoot, n + 1):
-            if j != lion_shoot and num_list[i-1][j - lion_shoot] == 0 and num_list[i-1][j] == 0:
-                continue
-            if num_list[i-1][j - lion_shoot] + value >= num_list[i-1][j]:
-                num_list[i][j] = num_list[i-1][j - lion_shoot] + value
-                lst_list[i][j] = lst_list[i-1][j - lion_shoot][:]
-                lst_list[i][j].append(target)
-            else:
-                num_list[i][j] = num_list[i-1][j]
-                lst_list[i][j] = lst_list[i-1][j][:]
-    max_ = max(num_list[n])
-    tmp = []
-    for i in range(n+1):
-        if num_list[n][i] == max_:
-            tmp.append(lst_list[n][i])
-    print(tmp)
-    #tmp.sort(key = lambda x: (-sum(x), -len(x)))
-    lst = tmp[0]
     
-    lion_score = sum(lst)
-    apeache_score = 0
-    for i in range(11):
-        if i not in lst and info[10-i]:
-            apeache_score += i
-    if lion_score <= apeache_score:
-        return [-1]
+    dfs(info, [0] * 11 , n, 10)
     
-    answer = [0] * 11
-    for i in range(11):
-        if i in lst:
-            answer[10-i] = info[10-i] + 1
-    answer[10] = n-sum(answer)
+    
+    answer = max_shoots
+    if max_ == 0:
+        answer = [-1]
     return answer
