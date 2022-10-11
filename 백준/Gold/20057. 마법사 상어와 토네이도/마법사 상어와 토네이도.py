@@ -5,66 +5,36 @@ def in_range(nr, nc):
 
 
 winds = {(0, -3): 5, (-1, -2): 10,  (1, -2): 10, (-2, -1): 2, (-1, -1): 7, (1, -1): 7, (2, -1): 2,
-         (-1, 0): 1, (1, 0): 1}
-
+         (-1, 0): 1, (1, 0): 1, (0, -2): 'a'}
 
 blow_sand = 0
 
+
 def move(xr, xc, idx):
     global blow_sand
-    ar_diff, ac_diff = 0, -2
-    yr_diff, yc_diff = 0, -1
-    ar, ac, yr, yc = xr, xc, xr, xc
-    if idx == 0:
-        ar += ar_diff
-        ac += ac_diff
-        yr += yr_diff
-        yc += yc_diff
-    elif idx == 3:
-        ar += ac_diff
-        ac -= ar_diff
-        yr += yc_diff
-        yc -= yr_diff
-    elif idx == 2:
-        ar -= ar_diff
-        ac -= ac_diff
-        yr -= yr_diff
-        yc -= yc_diff
-    elif idx == 1:
-        ar -= ac_diff
-        ac += ar_diff
-        yr -= yc_diff
-        yc += yr_diff
+    r, c = 0, -1
+    yr, yc = xr, xc
+    nr_diff = [r, -c, -r, c]
+    nc_diff = [c, r, -c, -r]
+    yr += nr_diff[idx]
+    yc += nc_diff[idx]
     y_sand = table[yr][yc]
     sand_total = 0
     for (r, c), v in winds.items():
         nr, nc = xr, xc
-        if idx == 0:
-            nr += r
-            nc += c
-        elif idx == 3:
-            nr += c
-            nc -= r
-        elif idx == 2:
-            nr -= r
-            nc -= c
-        elif idx == 1:
-            nr -= c
-            nc += r
+        nr_diff = [r, -c, -r, c]
+        nc_diff = [c, r, -c, -r]
+        nr += nr_diff[idx]
+        nc += nc_diff[idx]
+        if v == 'a':
+            sand = y_sand - sand_total
         else:
-            print("eroorrr")
-        sand = int(y_sand * v / 100)
+            sand = int(y_sand * v / 100)
         if in_range(nr, nc):
             table[nr][nc] += sand
         else:
             blow_sand += sand
         sand_total += sand
-    a_sand = y_sand - sand_total
-    if in_range(ar, ac):
-        table[ar][ac] += a_sand
-    else:
-        blow_sand += a_sand
-
     table[yr][yc] = 0
 
 
@@ -94,3 +64,5 @@ for _ in range(n):
 
 track()
 print(blow_sand)
+
+
