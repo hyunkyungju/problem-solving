@@ -1,130 +1,111 @@
-def print_table():
-    for r in range(1, n+1):
-        for c in range(1, n+1):
-            if c > 1 and table[r][c-1] > 0:
-                print(' ', end='')
-            print(table[r][c], end=' ')
-        print()
-    print("=======================")
+import copy
 
-n, m = map(int, input().split())
-table = [[-2]*(n+1)]
-for _ in range(n):
-    lst = [-2]
-    lst.extend(list(map(int, input().split())))
-    table.append(lst)
+def init():
+    init_n, _ = map(int, input().split())
+    init_table = []
+    for _ in range(init_n):
+        init_table.append(list(map(int, input().split())))
+    return init_n, init_table
 
 
 def in_range(nr, nc):
-    return 1 <= nr < n+1 and 1 <= nc < n+1
+    return 0 <= nr < n and 0 <= nc < n
 
 
-dr = [1, -1, 0, 0]
-dc = [0, 0, 1, -1]
-
-def dfs(vr, vc, rcolor, is_find_blocks = False):
-    if visited[vr][vc] or rainbow_visited[vr][vc]:
-        return 0, 0
-    if is_find_blocks:
-        route.append((vr, vc))
-    cnt = 1
-    rainbow_cnt = 0
-    vcolor = table[vr][vc]
-    if vcolor == 0:
-        rainbow_cnt = 1
-        rainbow_visited[vr][vc] = True
-    else:
-        visited[vr][vc] = True
-    for idx in range(4):
-        nr = vr + dr[idx]
-        nc = vc + dc[idx]
-        if not in_range(nr, nc):
-            continue
-        if (not visited[nr][nc] and table[nr][nc] == rcolor) or (not rainbow_visited[nr][nc] and table[nr][nc] == 0):
-            tmp_cnt, tmp_rainbow_cnt = dfs(nr, nc, rcolor, is_find_blocks)
-            cnt += tmp_cnt
-            rainbow_cnt += tmp_rainbow_cnt
-    return cnt, rainbow_cnt
+dr = [-1, 1, 0, 0]
+dc = [0, 0, -1, 1]
 
 
-def remove_blocks():
-    for vr, vc in route:
-        table[vr][vc] = -2
+def dfs(vr, vc, is_visited, color):
+    if is_visited[vr][vc]:
+        return []
+    is_visited[vr][vc] = True
+    route = [(vr, vc)]
+    for i in range(4):
+        nr = vr + dr[i]
+        nc = vc + dc[i]
+        if in_range(nr, nc) and not is_visited[nr][nc] and (table[nr][nc] == color or not table[nr][nc]):
+            route += dfs(nr, nc, is_visited, color)
+
+    return route
+
+def get_rainbows(route):
+    rainbows = []
+    for r, c in route:
+        if table[r][c] == 0:
+            rainbows.append((r, c))
+    return rainbows
 
 
+def find_blocks():
+    is_visited = [[False] * n for _ in range(n)]
+    max_route = [0]
+    max_rainbow_cnt = n ** 2
+    for r in range(n):
+        for c in range(n):
+            if not is_visited[r][c] and table[r][c] >= 1:
+                route = dfs(r, c, is_visited, table[r][c])
+                rainbows = get_rainbows(route)
+                rainbow_cnt = len(rainbows)
+                for rainbow_r, rainbow_c in rainbows:
+                    is_visited[rainbow_r][rainbow_c] = False
+                if len(route) > len(max_route) or (len(route) == len(max_route) and rainbow_cnt >= max_rainbow_cnt):
+                    max_route = route
+                    max_rainbow_cnt = rainbow_cnt
+
+    return max_route
+
+
+def remove_block_group(block_group):
+    for r, c in block_group:
+        table[r][c] = -2
 
 
 def gravity():
-    for c in range(1, n+1):
-        empty_cnt = 0
-        is_empty_continued = True
-        r = n
-        while r > 0:
+    for c in range(n):
+        empty = 0
+        for r in range(n - 1, -1, -1):
             if table[r][c] == -2:
-                if is_empty_continued:
-                    empty_cnt += 1
-                else:
-                    empty_cnt = 1
-                    is_empty_continued = True
+                empty += 1
             elif table[r][c] == -1:
-                is_empty_continued = False
-                empty_cnt = 0
-            elif table[r][c] >= 0:
-                if empty_cnt > 0:
-                    table[r+empty_cnt][c] = table[r][c]
-                    table[r][c] = -2
-                else:
-                    is_empty_continued = False
-
-            r -= 1
-
+                empty = 0
+            else:
+                table[r + empty][c], table[r][c] = table[r][c], table[r + empty][c]
 
 
 def rotate():
     global table
-    tmp_table = [[-2] * (n+1) for _ in range(n+1)]
-    for r in range(1, n+1):
-        for c in range(1, n+1):
-            tmp_table[n-c+1][r] = table[r][c]
-    table = tmp_table
+    tmp_table = [[-2] * n for _ in range(n)]
+    for r in range(n):
+        for c in range(n):
+            tmp_table[n - c - 1][r] = table[r][c]
+    table = copy.deepcopy(tmp_table)
 
 
-score = 0
-while True:
-    visited = [[False]*(n+1) for _ in range(n+1)]
-    max_count = 1
-    max_rainbow = 0
-    max_r = 0
-    max_c = 0
-    for r in range(1, n + 1):
-        for c in range(1, n + 1):
-            color = table[r][c]
-            if color > 0 and not visited[r][c]:
-                if r==4:
-                    pass
-                rainbow_visited = [[False] * (n + 1) for _ in range(n + 1)]
-                count, rainbow_count = dfs(r, c, color)
-                if count < 2:
-                    continue
-                if count > max_count or (count == max_count and rainbow_count >= max_rainbow):
-                    max_count = count
-                    max_rainbow = rainbow_count
-                    max_r = r
-                    max_c = c
-
-    if max_count == 1:
-        break
-    score += (max_count**2)
-    # 길찾기
-    rainbow_visited = [[False] * (n + 1) for _ in range(n + 1)]
-    visited = [[False] * (n + 1) for _ in range(n + 1)]
-    route = []
-    dfs(max_r, max_c, table[max_r][max_c], True)
-    remove_blocks()
-    gravity()
-    rotate()
-    gravity()
-
-print(score)
 
 
+def sol():
+    score = 0
+    while True:
+        # 1. 블록 그룹 찾기
+        block_group = find_blocks()
+        if len(block_group) < 2:
+            break
+
+        # 2. 블록그룹 제거
+        remove_block_group(block_group)
+        score += len(block_group) ** 2
+        # 3. 중력
+        gravity()
+
+        # 4. 회전
+        rotate()
+        # 5. 중력
+        gravity()
+    print(score)
+
+
+t = 1
+for it in range(t):
+    n, table = init()
+    sol()
