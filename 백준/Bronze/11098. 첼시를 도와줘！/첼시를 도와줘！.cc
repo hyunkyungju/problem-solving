@@ -1,6 +1,8 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <iostream>
+#include <cstdio>
+#include <cstring>
 
 using namespace std;
 
@@ -11,17 +13,16 @@ int main() {
 		int p;
 		scanf("%d", &p);
 		int max_price = -1;
-		string max_name = "";
+		char max_name[21];
 		for (int j = 0; j < p; j++) {
 			int price;
-			string name;
-			cin >> price >> name;
+			char name[21];
+			scanf("%d %s", &price, &name);
 			if (max_price < price) {
 				max_price = price;
-				max_name = name;
+				strcpy(max_name, name);
 			}
 		}
-		cout << max_name << endl;
+		printf("%s\n", max_name);
 	}
-	return 0;
 }
