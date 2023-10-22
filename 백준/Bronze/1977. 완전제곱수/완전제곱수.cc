@@ -1,22 +1,23 @@
-#include <iostream>
+#define _CRT_SECURE_NO_WARNINGS
+#include <stdio.h>
 #include <cmath>
 
 using namespace std;
 
 int main() {
-	int m, n;
-	cin >> m >> n;
+	int m, n, ret = 0;
+	scanf("%d %d", &m, &n);
 	int m_s = ceil(sqrt(m));
 	int n_s = sqrt(n);
-	int ret = 0;
+	
 	for (int i = m_s; i <= n_s; i++) {
 		ret += pow(i, 2);
 	}
 	if (ret == 0) {
-		cout << -1 << endl;
+		printf("-1");
 		return 0;
 	}
-	cout << ret << endl;
-	cout << pow(m_s, 2) << endl;
+	printf("%d\n%d", ret, int(pow(m_s, 2)));
+
 	return 0;
 }
